@@ -5,13 +5,13 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copiar dependencias (using full path from repo root for Koyeb builds)
-COPY MCP/mcp/koyeb/requirements.txt .
+COPY requirements.txt .
 
 # Instalar dependencias
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código del servidor (using full path from repo root for Koyeb builds)
-COPY MCP/mcp/koyeb/gmail_mcp_server.py .
+COPY gmail_mcp_server.py .
 
 # Puerto expuesto
 EXPOSE 8000
