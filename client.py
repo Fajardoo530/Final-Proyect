@@ -23,13 +23,21 @@ class GmailMCPClient:
         self.token = self._load_token()
 
     def _load_token(self) -> str:
-        """Carga el token de auth"""
-        rutaToken = "./client_token.txt"
-        token_file = rutaToken
+        token = os.getenv("MCP_BEARER_TOKEN")
+        if token:
+            return token.strip()
+
+        token_file = "./client_token.txt"
         if os.path.exists(token_file):
             with open(token_file, "r", encoding="utf-8") as f:
-                return f.read().strip()
-        return None
+                content = f.read().strip()
+                if content:
+                    return content
+
+        raise RuntimeError(
+            "No se encontró token: define MCP_BEARER_TOKEN o crea ./client_token.txt."
+    )
+
 
     async def _get_mcp_client(self):
         """Crea conexión con el servidor MCP"""
