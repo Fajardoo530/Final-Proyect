@@ -74,6 +74,16 @@ auth = JWTVerifier(
     audience="gmail-mcp"
 )
 
+from fastmcp.server.auth.providers.debug import DebugTokenVerifier
+
+expected = (os.getenv("MCP_BEARER_TOKEN") or "").strip()
+
+
+verifier = DebugTokenVerifier(
+    validate=lambda token: token.strip() == expected,
+    client_id="n8n",
+    scopes=["mcp:access"],
+)
 # Crear servidor con auth
 mcp = FastMCP("Gmail Manager", auth=auth)
 
