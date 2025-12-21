@@ -1,0 +1,10 @@
+fastmcp
+google-auth
+google-auth-oauthlib
+google-api-python-client
+uvicorn
+pydantic
+PyPDF2
+cryptography
+streamlit
+google.generativeai

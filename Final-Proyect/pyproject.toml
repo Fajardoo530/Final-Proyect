@@ -1,0 +1,12 @@
+[project]
+name = "gmail_MCP"
+version = "0.1.0"
+dependencies = [
+    "fastmcp",
+    "google-auth",
+    "google-auth-oauthlib",
+    "google-api-python-client"
+]
+
+[project.scripts]
+gmail_MCP = "gmail_MCP:main"
