@@ -13,6 +13,8 @@ from email.mime.text import MIMEText
 import os.path
 import pickle
 import json
+import jwt
+import time
 from pydantic import SecretStr
 
 # Configuración
@@ -51,11 +53,26 @@ def get_or_create_keypair():
 # Generar/cargar el par de claves
 keypair = get_or_create_keypair()
 
-# Crear token para el cliente
-client_token = keypair.create_token(
+# Crear token para el cliente manualmente (expira en 1 año para integraciones como n8n)
+def create_long_lived_token(keypair, subject, issuer, audience, expiration_days=365):
+    """Crea un token JWT con expiración personalizada"""
+    now = int(time.time())
+    payload = {
+        "sub": subject,
+        "iss": issuer,
+        "aud": audience,
+        "iat": now,
+        "exp": now + (expiration_days * 24 * 60 * 60)  # días a segundos
+    }
+    private_key = keypair.private_key.get_secret_value()
+    return jwt.encode(payload, private_key, algorithm="RS256")
+
+client_token = create_long_lived_token(
+    keypair=keypair,
     subject="gmail-client",
     issuer="gmail-mcp-server",
-    audience="gmail-mcp"
+    audience="gmail-mcp",
+    expiration_days=365
 )
 
 # Guardar token para el cliente en disco
@@ -63,7 +80,8 @@ with open('client_token.txt', 'w') as f:
     f.write(client_token)
 
 print(f"🔑 Token generado y guardado en client_token.txt")
-print(f"Token (primeros 50 caracteres): {client_token[:50]}...")
+#print(f"Token (primeros 50 caracteres): {client_token[:50]}...")
+print(f"Token: {client_token}")
 
 # Configurar auth con JWTVerifier
 public_key_str = keypair.public_key
@@ -82,42 +100,74 @@ mcp = FastMCP("Gmail Manager", auth=auth)
 def get_gmail_service():
     """Obtiene el servicio de Gmail autenticado"""
     creds = None
-    
-    # Token guardado previamente
-    if os.path.exists('token.pickle'):
+
+    # Opción 1: Cargar token desde variable de entorno (para Koyeb/producción)
+    token_b64 = os.environ.get('GMAIL_TOKEN_PICKLE_B64')
+    if token_b64:
+        try:
+            token_data = base64.b64decode(token_b64)
+            creds = pickle.loads(token_data)
+        except Exception as e:
+            print(f"Error cargando token desde variable de entorno: {e}")
+
+    # Opción 2: Cargar desde archivo local (para desarrollo)
+    if not creds and os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
             creds = pickle.load(token)
-    
-    # Si no hay credenciales válidas, solicita login
+
+    # Si no hay credenciales válidas
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
+            # Actualizar el archivo local si existe
+            if os.path.exists('token.pickle'):
+                with open('token.pickle', 'wb') as token:
+                    pickle.dump(creds, token)
         else:
-            flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-        
-        # Guarda las credenciales para la próxima vez
-        with open('token.pickle', 'wb') as token:
-            pickle.dump(creds, token)
-    
+            # En producción (Koyeb), no podemos hacer flujo interactivo
+            if token_b64:
+                raise RuntimeError(
+                    "El token de Gmail ha expirado y no se puede renovar. "
+                    "Regenera token.pickle localmente y actualiza GMAIL_TOKEN_PICKLE_B64"
+                )
+            # En desarrollo local, intentar flujo OAuth interactivo
+            if os.path.exists('credentials.json'):
+                flow = InstalledAppFlow.from_client_secrets_file('credentials.json', SCOPES)
+                creds = flow.run_local_server(port=0)
+                with open('token.pickle', 'wb') as token:
+                    pickle.dump(creds, token)
+            else:
+                raise RuntimeError(
+                    "No se encontró credentials.json ni GMAIL_TOKEN_PICKLE_B64. "
+                    "Configura las credenciales de Gmail."
+                )
+
     return build('gmail', 'v1', credentials=creds)
 
 @mcp.tool()
-def list_emails(max_results: int = 10, query: str = "") -> list[dict]:
+def list_emails(
+    max_results: int = 10,
+    query: str = "",
+    sessionId: str = "",
+    action: str = "",
+    chatInput: str = "",
+    toolCallId: str = ""
+) -> list[dict]:
     """
     Lista los emails recientes del usuario
-    
+
     Args:
         max_results: Número máximo de emails a retornar (default: 10)
         query: Filtro de búsqueda de Gmail (ej: "from:juan@example.com", "is:unread")
-    
+
     Returns:
         Lista de emails con id, asunto, remitente y snippet
     """
+    # sessionId, action, chatInput, toolCallId son parámetros internos de n8n (se ignoran)
     service = get_gmail_service()
-    
+
     results = service.users().messages().list(
-        userId='me', 
+        userId='me',
         maxResults=max_results,
         q=query
     ).execute()
@@ -143,18 +193,27 @@ def list_emails(max_results: int = 10, query: str = "") -> list[dict]:
     return emails
 
 @mcp.tool()
-def send_email(to: str, subject: str, body: str) -> dict:
+def send_email(
+    to: str,
+    subject: str,
+    body: str,
+    sessionId: str = "",
+    action: str = "",
+    chatInput: str = "",
+    toolCallId: str = ""
+) -> dict:
     """
     Envía un email desde la cuenta del usuario
-    
+
     Args:
         to: Dirección de email del destinatario
         subject: Asunto del email
         body: Cuerpo del mensaje en texto plano
-    
+
     Returns:
         Confirmación con el ID del mensaje enviado
     """
+    # sessionId, action, chatInput, toolCallId son parámetros internos de n8n (se ignoran)
     service = get_gmail_service()
     
     # Crear el mensaje
