@@ -121,7 +121,8 @@ def mongo_find(
     sessionId: str = "",
     action: str = "",
     chatInput: str = "",
-    toolCallId: str = ""
+    toolCallId: str = "",
+    **kwargs
 ) -> list[dict]:
     """
     (MongoDB) Devuelve documentos de una colección.
@@ -152,7 +153,7 @@ def mongo_find(
 
 
 @mcp.tool()
-def mongo_insertil(
+def mongo_insert(
     to: str,
     subject: str,
     body: str,
@@ -226,7 +227,7 @@ def get_setup_manual(version: str) -> str:
 Ejemplo query:
 {{"collection":"users","filter":{{"active":true}}}}
 
-### mongo_insertil (MongoDB insert_one)
+### mongo_insert (MongoDB insert_one)
 - to: nombre de la colección
 - subject: opcional (se guarda como _subject)
 - body: JSON string del documento a insertar
