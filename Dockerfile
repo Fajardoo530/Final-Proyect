@@ -11,7 +11,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiar código del servidor (using full path from repo root for Koyeb builds)
-COPY gmail_mcp_server.py .
+COPY mongo_mcp_server.py .
 
 # Puerto expuesto
 EXPOSE 8000
