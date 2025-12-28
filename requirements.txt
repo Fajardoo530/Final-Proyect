@@ -8,3 +8,6 @@ PyPDF2
 cryptography
 streamlit
 google.generativeai
+pymongo
+dnspython
+pyjwt

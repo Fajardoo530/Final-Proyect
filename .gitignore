@@ -3,3 +3,4 @@ token.pickle
 .env
 .venv/
 __pycache__/
+mcp_gmail.py
