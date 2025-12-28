@@ -160,7 +160,8 @@ def mongo_insert(
     sessionId: str = "",
     action: str = "",
     chatInput: str = "",
-    toolCallId: str = ""
+    toolCallId: str = "",
+    **kwargs
 ) -> dict:
     """
     (MongoDB) Inserta un documento en una colección.
