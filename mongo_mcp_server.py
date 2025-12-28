@@ -12,7 +12,7 @@ import json
 import jwt
 import time
 from pydantic import SecretStr
-from typing import Any, Optional
+from typing import Any, Optional, Union
 
 
 # ==================== AUTH / KEYPAIR ====================
@@ -126,7 +126,7 @@ def mongo_find(
     client_msg_id: str = "",
     text: str = "",
     team: str = "",
-    blocks: str = "",
+    blocks: Optional[Union[str, list[Any]]] = None,
     channel: str = "",
     event_ts: str = "",
     channel_type: str = "",
@@ -174,7 +174,7 @@ def mongo_insert(
     client_msg_id: str = "",
     text: str = "",
     team: str = "",
-    blocks: str = "",
+    blocks: Optional[Union[str, list[Any]]] = None,
     channel: str = "",
     event_ts: str = "",
     channel_type: str = "",
