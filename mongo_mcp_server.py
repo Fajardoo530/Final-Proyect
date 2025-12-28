@@ -115,7 +115,7 @@ def get_mongo_db():
 # ==================== TOOLS ====================
 
 @mcp.tool()
-def list_emails(
+def mongo_find(
     max_results: int = 10,
     query: str = "",
     sessionId: str = "",
@@ -152,7 +152,7 @@ def list_emails(
 
 
 @mcp.tool()
-def send_email(
+def mongo_insertil(
     to: str,
     subject: str,
     body: str,
@@ -218,7 +218,7 @@ def get_setup_manual(version: str) -> str:
 - MONGODB_DB: nombre de la base de datos
 
 ## Tools disponibles
-### list_emails (MongoDB find)
+### mongo_find (MongoDB find)
 - max_results: límite de documentos
 - query: JSON string con:
   {{"collection":"<nombre>", "filter": {{...}}}}
@@ -226,7 +226,7 @@ def get_setup_manual(version: str) -> str:
 Ejemplo query:
 {{"collection":"users","filter":{{"active":true}}}}
 
-### send_email (MongoDB insert_one)
+### mongo_insertil (MongoDB insert_one)
 - to: nombre de la colección
 - subject: opcional (se guarda como _subject)
 - body: JSON string del documento a insertar
@@ -245,7 +245,7 @@ def daily_email_summary() -> list[dict]:
     """Prompt de ejemplo (mantengo el nombre para que sea igual al original)."""
     prompt_text = (
         "Eres un asistente experto en MongoDB. Usa las tools disponibles para consultar datos "
-        "y devolver respuestas claras. Si necesitas leer datos, usa list_emails con un query JSON "
+        "y devolver respuestas claras. Si necesitas leer datos, usa mongo_find con un query JSON "
         'que incluya {"collection": "...", "filter": {...}}.'
     )
     return [
@@ -265,7 +265,7 @@ def compose_professional_email(recipient: str = "", topic: str = "") -> list[dic
     prompt_text = (
         "Genera una consulta MongoDB (filtro) en JSON para buscar documentos relevantes. "
         f"Colección sugerida: {recipient}. Tema: {topic}. "
-        'Devuelve un JSON para usarlo como query en list_emails: {"collection":"...","filter":{...}}'
+        'Devuelve un JSON para usarlo como query en mongo_find: {"collection":"...","filter":{...}}'
     )
     return [
         {
