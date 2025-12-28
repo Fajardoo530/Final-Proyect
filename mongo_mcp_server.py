@@ -12,6 +12,7 @@ import json
 import jwt
 import time
 from pydantic import SecretStr
+from typing import Any, Optional
 
 
 # ==================== AUTH / KEYPAIR ====================
@@ -118,11 +119,21 @@ def get_mongo_db():
 def mongo_find(
     max_results: int = 10,
     query: str = "",
+    # campos extra típicos de Slack / n8n (opcionales)
+    type: str = "",
+    user: str = "",
+    ts: str = "",
+    client_msg_id: str = "",
+    text: str = "",
+    team: str = "",
+    blocks: Optional[list[Any]] = None,
+    channel: str = "",
+    event_ts: str = "",
+    channel_type: str = "",
     sessionId: str = "",
     action: str = "",
     chatInput: str = "",
-    toolCallId: str = "",
-    **kwargs
+    toolCallId: str = ""
 ) -> list[dict]:
     """
     (MongoDB) Devuelve documentos de una colección.
@@ -157,11 +168,20 @@ def mongo_insert(
     to: str,
     subject: str,
     body: str,
+    type: str = "",
+    user: str = "",
+    ts: str = "",
+    client_msg_id: str = "",
+    text: str = "",
+    team: str = "",
+    blocks: Optional[list[Any]] = None,
+    channel: str = "",
+    event_ts: str = "",
+    channel_type: str = "",
     sessionId: str = "",
     action: str = "",
     chatInput: str = "",
-    toolCallId: str = "",
-    **kwargs
+    toolCallId: str = ""
 ) -> dict:
     """
     (MongoDB) Inserta un documento en una colección.
