@@ -21,4 +21,4 @@ ENV PORT=8000
 ENV HOST=0.0.0.0
 
 # Comando de inicio
-CMD ["python", "gmail_mcp_server.py"]
+CMD ["python", "mongo_mcp_server.py"]
